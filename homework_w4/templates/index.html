@@ -9,9 +9,9 @@
           integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
     <link href="https://fonts.googleapis.com/css2?family=Do+Hyeon&display=swap" rel="stylesheet">
 
-        <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"
-                integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN"
-                crossorigin="anonymous"></script>
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"
+            integrity="sha256-9/aliU8dGd2tb6OSsuzixeV4y/faTqgFtohetphbbj0="
+            crossorigin="anonymous"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"
             integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q"
             crossorigin="anonymous"></script>
@@ -19,10 +19,34 @@
             integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl"
             crossorigin="anonymous"></script>
     <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
-
     <script>
 
         $(document).ready(function () {
+            $.ajax({
+                type: "GET",
+                url: "/order",
+                data: {},
+                success: function (response) {
+                    orders = response['order']
+                    for (let i = 0; i < orders.length; i++) {
+                        add = orders[i]['add']
+                        name = orders[i]['name']
+                        phone = orders[i]['phone']
+                        num = orders[i]['num']
+
+                        temp = `
+                                <tr>
+                                    <td>${name}</td>
+                                    <td>${num}</td>
+                                    <td>${add}</td>
+                                    <td>${phone}</td>
+                                </tr>`
+                        $('#orders-info-body').append(temp)
+                        console.log(add,name,phone,num)
+                    }
+                }
+            })
+
             $.ajax({
                 type: "GET",
                 url: "https://api.manana.kr/exchange/rate.json",
@@ -36,10 +60,6 @@
         });
 
         function btn(s, x) {
-            let name = $('#name')
-            let num = $('#num')
-            let add = $('#add')
-            let phone = $('#phone')
             if (x) {
                 swal("완료되었습니다", s, "success");
             } else {
@@ -67,17 +87,21 @@
                     btn('형식을 잘못 입력하였습니다(xxx-xxxx-xxxx)', false)
                 }
             } else {
-                $('#orders-info-body').append(`<tr>
-                                                <td>${name}</td>
-                                                <td>${num}</td>
-                                                <td>${add}</td>
-                                              </tr>`)
-
-                name = ''
-                num = ''
-                add = ''
-                phone = ''
-
+                $.ajax({
+                    type: "POST",
+                    url: "/order",
+                    data: {
+                        'name': name,
+                        'num': num,
+                        'add': add,
+                        'phone': phone
+                    },
+                    success: function (response) {
+                        if (response["result"] === "success") {
+                            window.location.reload();
+                        }
+                    }
+                })
                 btn("입력이 완료되었습니다", true)
             }
         }
@@ -140,9 +164,11 @@
         button:focus {
             outline: none;
         }
-        .orders-info-head{
+
+        .orders-info-head {
             border-bottom: 3px solid darkgrey;
         }
+
         .orders-info {
             width: 100%;
             height: 100px;
@@ -194,14 +220,10 @@
                 <td>주문자</td>
                 <td>주문수량</td>
                 <td>주소</td>
+                <td>전화번호</td>
             </tr>
             </thead>
             <tbody id="orders-info-body">
-            <tr>
-                <td>홍길동</td>
-                <td>0</td>
-                <td>서울시 동작구 ~~~~</td>
-            </tr>
             </tbody>
         </table>
     </div>
